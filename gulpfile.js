@@ -1,127 +1,63 @@
 let gulp = require("gulp");
+let clean = require("gulp-clean");
+let less = require("gulp-less");
+let cssmin = require("gulp-cssmin");
+let rename = require("gulp-rename");
+let concat = require("gulp-concat");
+let { default: uglify } = require("gulp-uglify-es");
 
 let app = {
-    src: "./src",
+    fonts_src: "./node_modules/bootstrap/fonts/*",
+    less: "./node_modules/bootstrap/less/bootstrap.less",
+    js: [
+        './node_modules/bootstrap/js/transition.js',
+        './node_modules/bootstrap/js/alert.js',
+        './node_modules/bootstrap/js/button.js',
+        './node_modules/bootstrap/js/carousel.js',
+        './node_modules/bootstrap/js/collapse.js',
+        './node_modules/bootstrap/js/dropdown.js',
+        './node_modules/bootstrap/js/modal.js',
+        './node_modules/bootstrap/js/tooltip.js',
+        './node_modules/bootstrap/js/popover.js',
+        './node_modules/bootstrap/js/scrollspy.js',
+        './node_modules/bootstrap/js/tab.js',
+        './node_modules/bootstrap/js/affix.js'
+    ],
     dist: "./dist"
 }
 
-// html压缩
-// npm i gulp-htmlmin --save-dev
-let htmlmin = require("gulp-htmlmin");
-
-gulp.task("htmlmin", function(done) {
-    gulp.src(`${app.src}/**/*.{htm,html}`)
-        .pipe(htmlmin({
-            removeComments: true,
-            collapseWhitespace: true,
-            collapseBooleanAttributes: true,
-        }))
-        .pipe(gulp.dest(app.dist));
+gulp.task("clean", function(done) {
+    gulp.src(app.dist)
+        .pipe(clean());
 
     done();
 });
 
-// css压缩
-// npm i gulp-cssmin --save-dev
-
-let cssmin = require("gulp-cssmin");
-
-gulp.task("cssmin", function(done) {
-    gulp.src(`${app.src}/**/*.css`)
-        .pipe(cssmin())
-        .pipe(gulp.dest(app.dist));
+gulp.task("fonts", function(done) {
+    gulp.src(app.fonts_src)
+        .pipe(gulp.dest(`${app.dist}/bootstrap/fonts`));
 
     done();
 });
 
-// js压缩混淆
-// npm i gulp-uglify-es --save-dev
-
-// let jsmin = require("gulp-uglify-es");
-
-// gulp.task("jsmin", function(done) {
-//     gulp.src(`${app.src}/**/*.js`)
-//         .pipe(jsmin.default())
-//         .pipe(gulp.dest(app.dist));
-
-//     done();
-// });
-
-// let { default: jsmin } = require("gulp-uglify-es");
-
-// gulp.task("jsmin", function(done) {
-//     gulp.src(`${app.src}/**/*.js`)
-//         .pipe(jsmin())
-//         .pipe(gulp.dest(app.dist));
-
-//     done();
-// });
-
-
-// 文件重命名（实现src拷贝到bak目录下，所有文件后缀名都附加一个.bak）
-// npm i gulp-rename -D
-
-let rename = require("gulp-rename");
-
-gulp.task("bak", function(done) {
-    gulp.src(`${app.src}/**`)
-        .pipe(rename(function(target, info) {
-            console.log(target, typeof info);
-            // if (target.extname)
-            //     target.extname += ".bak";
-        }))
-        .pipe(gulp.dest(app.dist));
-
-    done();
-});
-
-// 文件合并
-// npm i gulp-concat -D
-
-let concat = require("gulp-concat");
-
-// 将src根目录下的所有css文件合并为all.css
-gulp.task("concat", function(done) {
-    gulp.src(`${app.src}/*.css`)
-        .pipe(concat("all.css"))
-        .pipe(cssmin())
-        .pipe(gulp.dest(app.dist));
-
-    done();
-});
-
-// less编译
-// npm i gulp-less -D
-
-let less = require("gulp-less");
-
-// 将src/less/*.less编译到dist/css/*.css
-gulp.task("less1", function(done) {
-    gulp.src(`${app.src}/less/*.less`)
+gulp.task("css", function(done) {
+    gulp.src(app.less)
         .pipe(less())
-        .pipe(gulp.dest(app.dist + "/css"));
-
-    done();
-});
-
-// 将src/less/*.less编译到dist/css/all.css
-gulp.task("less2", function(done) {
-    gulp.src(`${app.src}/less/*.less`)
-        .pipe(less())
-        .pipe(concat("all.css"))
-        .pipe(gulp.dest(app.dist + "/css"));
-
-    done();
-});
-
-// 将src/less/*.less编译并压缩到dist/css/all.min.css
-gulp.task("less3", function(done) {
-    gulp.src(`${app.src}/less/*.less`)
-        .pipe(less())
-        .pipe(concat("all.css"))
         .pipe(cssmin())
-        .pipe(rename("all.min.css"))
-        .pipe(gulp.dest(app.dist + "/css"));
+        .pipe(rename("bootstrap.min.css"))
+        .pipe(gulp.dest(`${app.dist}/bootstrap/css`));
 
     done();
 });
+
+gulp.task("js", function(done) {
+    gulp.src(app.js)
+        .pipe(concat("bootstrap.js"))
+        .pipe(uglify())
+        .pipe(rename("bootstrap.min.js"))
+        .pipe(gulp.dest(`${app.dist}/bootstrap/js`));
+
+    done();
+});
+
+gulp.task("default", gulp.series("fonts", "css", "js"));
